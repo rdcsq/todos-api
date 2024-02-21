@@ -12,7 +12,9 @@ export const sessionsTable = pgTable(
   'sessions',
   {
     id: uuid('id').notNull(),
-    accountId: uuid('account_id').notNull(),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => accountsTable.id),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     lastUsed: timestamp('last_used').notNull().defaultNow(),
     origin: text('origin').notNull(),
