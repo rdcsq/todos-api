@@ -12,6 +12,7 @@ import { AccountsService } from 'src/accounts/accounts.service';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/user.guard';
 import { Request as ExpressRequest } from 'express';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,5 +38,22 @@ export class AuthController {
     const account = this.accountsService.get(req.user as string);
     if (!account) throw new BadRequestException();
     return account;
+  }
+
+  @Post('/update-password')
+  @UseGuards(AuthGuard)
+  async updatePassword(
+    @Request() req: ExpressRequest,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    const updateSuccessful = await this.authService.updatePassword(
+      req.user as string,
+      updatePasswordDto.oldPassword,
+      updatePasswordDto.newPassword,
+    );
+
+    if (!updateSuccessful) {
+      throw new BadRequestException();
+    }
   }
 }

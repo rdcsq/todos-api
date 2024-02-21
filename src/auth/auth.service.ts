@@ -16,6 +16,36 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * @param id Account ID
+   * @returns Password, `null` if account doesn't have a password set or `undefined` if account doesn't exist.
+   */
+  async verifyPasswordFromAccountID(id: string, password: string) {
+    const account = await this.databaseService.query.accountsTable.findFirst({
+      where: eq(accountsTable.id, id),
+      columns: {
+        password: true,
+      },
+    });
+
+    return (
+      account &&
+      account.password &&
+      (await argon2.verify(account.password, password))
+    );
+  }
+
+  async updatePassword(
+    accountId: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    if (!(await this.verifyPasswordFromAccountID(accountId, oldPassword)))
+      return false;
+    await this.setPassword(accountId, newPassword);
+    return true;
+  }
+
   async setPassword(accountId: string, password: string) {
     const passwordHash = await argon2.hash(password);
     await this.databaseService
