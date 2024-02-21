@@ -12,6 +12,7 @@ import { ApiConfigService } from 'src/api-config/api-config.service';
     AccountsModule,
     ApiConfigModule,
     JwtModule.registerAsync({
+      global: true,
       imports: [ApiConfigModule],
       inject: [ApiConfigService],
       useFactory(apiConfigService: ApiConfigService) {

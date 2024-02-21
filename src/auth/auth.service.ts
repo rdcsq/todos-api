@@ -5,7 +5,7 @@ import {
 } from 'src/database/database.constants';
 import * as argon2 from 'argon2';
 import { accountsTable, sessionsTable } from 'src/database/database.schema';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { JwtService } from '@nestjs/jwt';
 import { Session } from './entities/session.payload';
 
@@ -40,14 +40,5 @@ export class AuthService {
       sessionId,
       accountId,
     } satisfies Session);
-  }
-
-  async getSession(sessionId: string, accountId: string) {
-    return await this.databaseService.query.sessionsTable.findFirst({
-      where: and(
-        eq(sessionsTable.id, sessionId),
-        eq(sessionsTable.accountId, accountId),
-      ),
-    });
   }
 }

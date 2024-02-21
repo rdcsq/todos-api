@@ -1,19 +1,26 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Session } from '../entities/session.payload';
-import { AuthService } from '../auth.service';
+import {
+  DATABASE_SERVICE,
+  DatabaseService,
+} from 'src/database/database.constants';
+import { and, eq } from 'drizzle-orm';
+import { sessionsTable } from '../entities/session.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly authService: AuthService,
+    @Inject(DATABASE_SERVICE)
+    private readonly databaseService: DatabaseService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,10 +30,12 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload: Session = await this.jwtService.verifyAsync(token);
-      const session = await this.authService.getSession(
-        payload.sessionId,
-        payload.accountId,
-      );
+      const session = await this.databaseService.query.sessionsTable.findFirst({
+        where: and(
+          eq(sessionsTable.id, payload.sessionId),
+          eq(sessionsTable.accountId, payload.accountId),
+        ),
+      });
       if (!session) throw new UnauthorizedException();
       request['user'] = session.accountId;
     } catch {
