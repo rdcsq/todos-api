@@ -8,6 +8,7 @@ import { accountsTable, sessionsTable } from 'src/database/database.schema';
 import { eq } from 'drizzle-orm';
 import { JwtService } from '@nestjs/jwt';
 import { Session } from './entities/session.payload';
+import { SignInDto } from './dto/sign-in.dto';
 
 @Injectable()
 export class AuthService {
@@ -70,5 +71,28 @@ export class AuthService {
       sessionId,
       accountId,
     } satisfies Session);
+  }
+
+  /**
+   * @returns Account ID if account exists and email is correct
+   */
+  async signIn(signInDto: SignInDto) {
+    const account = await this.databaseService.query.accountsTable.findFirst({
+      where: eq(accountsTable.email, signInDto.email),
+      columns: {
+        id: true,
+        password: true,
+      },
+    });
+
+    if (
+      !account ||
+      !account.password ||
+      !(await argon2.verify(account.password, signInDto.password))
+    ) {
+      return;
+    }
+
+    return account.id;
   }
 }

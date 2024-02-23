@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/user.guard';
 import { Request as ExpressRequest } from 'express';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { SignInDto } from './dto/sign-in.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -55,5 +56,14 @@ export class AuthController {
     if (!updateSuccessful) {
       throw new BadRequestException();
     }
+  }
+
+  @Post('/signin')
+  async signIn(@Body() signInDto: SignInDto) {
+    const accountId = await this.authService.signIn(signInDto);
+    if (!accountId)
+      throw new BadRequestException('Wrong username or password.');
+    const accessToken = await this.authService.createSession(accountId);
+    return { accessToken };
   }
 }
